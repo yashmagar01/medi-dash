@@ -15,8 +15,15 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow any localhost origin (handles Vite port auto-increment: 5173, 5174, etc.)
-    if (!origin || origin.startsWith('http://localhost')) {
+    const allowedOrigins = [process.env.FRONTEND_URL].filter(Boolean) as string[];
+    
+    // Allow localhost (development) and frontend URLs configured in env
+    if (
+      !origin || 
+      origin.startsWith('http://localhost') || 
+      origin.startsWith('http://127.0.0.1') ||
+      allowedOrigins.some(o => origin === o || o.startsWith(origin) || origin.startsWith(o))
+    ) {
       callback(null, true);
     } else {
       callback(new Error(`CORS: ${origin} not allowed`));
