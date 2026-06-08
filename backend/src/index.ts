@@ -34,22 +34,32 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
+// Routes & Sub-routers
+const apiRouter = express.Router();
+
+// Health check on both router and app
+apiRouter.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Routes
-app.use('/medicines', medicinesRouter);
-app.use('/billing', billingRouter);
-app.use('/bills', billingRouter);
-app.use('/dashboard', dashboardRouter);
+apiRouter.use('/medicines', medicinesRouter);
+apiRouter.use('/billing', billingRouter);
+apiRouter.use('/bills', billingRouter);
+apiRouter.use('/dashboard', dashboardRouter);
+
+app.use('/api', apiRouter); // Supports Vercel Serverless Function routing (same-domain)
+app.use('/', apiRouter);    // Supports local direct routing and separate hosting
 
 // Global error handler (must be last)
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`✅ AR Medicals Backend running on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`✅ AR Medicals Backend running on http://localhost:${PORT}`);
+  });
+}
 
 export default app;
