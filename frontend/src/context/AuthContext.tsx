@@ -2,6 +2,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
 
+const safeSetItem = (key: string, value: string) => {
+  try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+};
+
+const safeRemoveItem = (key: string) => {
+  try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
+};
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -20,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.access_token) {
-        localStorage.setItem('sb-access-token', session.access_token);
+        safeSetItem('sb-access-token', session.access_token);
       }
       setLoading(false);
     });
@@ -29,9 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.access_token) {
-        localStorage.setItem('sb-access-token', session.access_token);
+        safeSetItem('sb-access-token', session.access_token);
       } else {
-        localStorage.removeItem('sb-access-token');
+        safeRemoveItem('sb-access-token');
       }
     });
 
@@ -46,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async (): Promise<void> => {
     await supabase.auth.signOut();
-    localStorage.removeItem('sb-access-token');
+    safeRemoveItem('sb-access-token');
   };
 
   return (

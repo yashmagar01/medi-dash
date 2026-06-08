@@ -7,7 +7,13 @@ export function getApiUrl(): string {
 }
 
 export function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem('sb-access-token');
+  let token: string | null = null;
+  try {
+    token = localStorage.getItem('sb-access-token');
+  } catch (err) {
+    console.warn('Local storage access blocked');
+  }
+  
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
